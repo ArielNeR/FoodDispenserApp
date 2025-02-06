@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<!-- Asegúrate de tener la siguiente línea en App.xaml.cs o en MauiProgram para la resolución de xmlns -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:chart="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="FoodDispenserApp.MainPage"
              Title="Food Dispenser Monitor">
     <ScrollView>
@@ -30,11 +30,15 @@
             <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
             <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" />
 
-            <!-- Sección de gráficos históricos (placeholder) -->
-            <Label Text="Gráfico Histórico (Placeholder)" FontSize="Medium" />
-            <!-- Ejemplo: Para usar Microcharts, se podría insertar un ChartView.
-           Asegúrate de definir la propiedad 'HistoricalChart' en el ViewModel y asignarle un chart de Microcharts. -->
-            <!-- <chart:ChartView Chart="{Binding HistoricalChart}" HeightRequest="200" /> -->
+            <!-- Gráficos estadísticos -->
+            <Label Text="Gráfico de Temperatura" FontSize="Medium" />
+            <chart:ChartView Chart="{Binding TemperatureChart}" HeightRequest="200" />
+
+            <Label Text="Gráfico de Humedad" FontSize="Medium" />
+            <chart:ChartView Chart="{Binding HumidityChart}" HeightRequest="200" />
+
+            <Label Text="Gráfico de Nivel de Comida" FontSize="Medium" />
+            <chart:ChartView Chart="{Binding FoodLevelChart}" HeightRequest="200" />
         </StackLayout>
     </ScrollView>
 </ContentPage>
