@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- Asegúrate de tener la siguiente línea en App.xaml.cs o en MauiProgram para la resolución de xmlns -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodDispenserApp.MainPage"
+             Title="Food Dispenser Monitor">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="20">
+            <!-- Indicador de conexión -->
+            <Label Text="Estado de Conexión:" FontSize="Medium" />
+            <Label Text="{Binding ConnectionStatus}" FontAttributes="Bold" TextColor="Green"/>
+
+            <!-- Datos de sensores -->
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <StackLayout>
+                    <Label Text="Temperatura:" />
+                    <Label Text="{Binding Temperature}" FontSize="Large" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Humedad:" />
+                    <Label Text="{Binding Humidity}" FontSize="Large" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Nivel de Comida:" />
+                    <Label Text="{Binding FoodLevel}" FontSize="Large" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Botones de acción -->
+            <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
+            <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" />
+
+            <!-- Sección de gráficos históricos (placeholder) -->
+            <Label Text="Gráfico Histórico (Placeholder)" FontSize="Medium" />
+            <!-- Ejemplo: Para usar Microcharts, se podría insertar un ChartView.
+           Asegúrate de definir la propiedad 'HistoricalChart' en el ViewModel y asignarle un chart de Microcharts. -->
+            <!-- <chart:ChartView Chart="{Binding HistoricalChart}" HeightRequest="200" /> -->
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
