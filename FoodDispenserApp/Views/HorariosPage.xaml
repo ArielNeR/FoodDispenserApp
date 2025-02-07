@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodDispenserApp.Views.HorariosPage"
+             Title="Horarios de Dispensación">
+    <ContentPage.Content>
+        <StackLayout Padding="20" Spacing="20">
+            <Label Text="Horarios de Dispensación" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="Center" />
+
+            <!-- Lista de horarios -->
+            <CollectionView ItemsSource="{Binding Horarios}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Orientation="Horizontal" Padding="10">
+                            <Label Text="{Binding Hora}" FontSize="Large" />
+                            <Label Text=":" FontSize="Large" />
+                            <Label Text="{Binding Minuto}" FontSize="Large" />
+                            <Label Text="   Duración: " FontSize="Large" />
+                            <Label Text="{Binding Duracion}" FontSize="Large" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Botón para editar horarios -->
+            <Button Text="Editar Horarios" Clicked="OnEditHorariosClicked" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

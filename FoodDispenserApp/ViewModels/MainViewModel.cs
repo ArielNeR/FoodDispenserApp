@@ -39,13 +39,6 @@ namespace FoodDispenserApp.ViewModels
             set { _foodLevel = value; OnPropertyChanged(); }
         }
 
-        private List<Horario> _horarios = new();
-        public List<Horario> Horarios
-        {
-            get => _horarios;
-            set { _horarios = value; OnPropertyChanged(); }
-        }
-
         private string _connectionStatus = "Desconocido";
         public string ConnectionStatus
         {
@@ -126,6 +119,16 @@ namespace FoodDispenserApp.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        private List<Horario> _horarios = new();
+        public List<Horario> Horarios
+        {
+            get => _horarios;
+            set { _horarios = value; OnPropertyChanged(); }
+        }
+
+        // Comando para guardar los horarios
+        public ICommand SaveHorariosCommand { get; }
+
         public MainViewModel(IApiService apiService,
                              IMqttService mqttService,
                              IConnectivityService connectivityService)
@@ -136,8 +139,9 @@ namespace FoodDispenserApp.ViewModels
 
             RefreshCommand = new Command(async () => await RefreshDataAsync());
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
+            SaveHorariosCommand = new Command(async () => await SaveHorariosAsync());
 
-            // Suscribirse a datos vía MQTT (si se reciben, se actualiza el historial y los valores)
+            // Suscribirse a datos vía MQTT (actualiza los datos y el historial)
             _mqttService.OnSensorDataReceived += (s, data) =>
             {
                 Temperature = data.Temperature;
@@ -147,17 +151,27 @@ namespace FoodDispenserApp.ViewModels
                 UpdateHistory(data);
             };
 
-            // Establecer un estado inicial (esto se actualizará en RefreshDataAsync)
             ConnectionStatus = "Esperando actualización...";
 
-            // Realizar un refresco inicial después de 3 segundos para dar tiempo a la conexión
             InitializeRefresh();
 
-            // Configurar el temporizador para refrescar los datos cada 3 minutos
-            _refreshTimer = new System.Timers.Timer(180000); // 180,000 ms = 3 minutos
+            _refreshTimer = new System.Timers.Timer(180000); // 3 minutos
             _refreshTimer.Elapsed += async (s, e) => await RefreshDataAsync();
             _refreshTimer.AutoReset = true;
             _refreshTimer.Enabled = true;
+        }
+
+        private async Task SaveHorariosAsync()
+        {
+            try
+            {
+                await _apiService.UpdateHorariosAsync(Horarios);
+                await Application.Current.MainPage.DisplayAlert("Éxito", "Horarios actualizados correctamente", "OK");
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron actualizar los horarios: " + ex.Message, "OK");
+            }
         }
 
         // Método para iniciar el primer refresco con un retraso de 3 segundos

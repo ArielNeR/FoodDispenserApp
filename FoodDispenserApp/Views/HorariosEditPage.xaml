@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodDispenserApp.Views.HorariosEditPage"
+             Title="Editar Horarios">
+    <ContentPage.Content>
+        <StackLayout Padding="20" Spacing="20">
+            <Label Text="Editar Horarios" FontSize="Medium" HorizontalOptions="Center" />
+
+            <!-- Listado editable de horarios -->
+            <CollectionView ItemsSource="{Binding Horarios}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto" Padding="5">
+                            <!-- Entry para Hora -->
+                            <Entry Text="{Binding Hora, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Hora" />
+                            <!-- Entry para Minuto -->
+                            <Entry Text="{Binding Minuto, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Minuto" Grid.Column="1"/>
+                            <!-- Entry para Duración -->
+                            <Entry Text="{Binding Duracion, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Duración" Grid.Column="2"/>
+                            <!-- Botón para eliminar -->
+                            <Button Text="Eliminar" Grid.Column="3" Clicked="OnDeleteHorarioClicked" CommandParameter="{Binding .}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Botón para agregar un nuevo horario -->
+            <Button Text="Agregar Horario" Clicked="OnAddHorarioClicked" />
+
+            <!-- Botón para guardar cambios -->
+            <Button Text="Guardar Horarios" Command="{Binding SaveHorariosCommand}" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

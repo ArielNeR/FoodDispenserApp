@@ -67,4 +67,13 @@
 		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <MauiXaml Update="Views\HorariosEditPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\HorariosPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

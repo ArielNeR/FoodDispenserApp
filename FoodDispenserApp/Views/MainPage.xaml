@@ -30,6 +30,9 @@
             <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
             <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" />
 
+            <!-- Nuevo botón para Horarios -->
+            <Button Text="Ver/Editar Horarios" Clicked="OnHorariosClicked" />
+
             <!-- Gráficos estadísticos -->
             <Label Text="Gráfico de Temperatura" FontSize="Medium" />
             <chart:ChartView Chart="{Binding TemperatureChart}" HeightRequest="200" />

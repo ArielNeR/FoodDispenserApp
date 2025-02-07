@@ -49,9 +49,12 @@ public class ApiService : IApiService
         return response.Horarios;
     }
 
-    public async Task UpdateHorariosAsync(List<string> horarios)
+    public async Task UpdateHorariosAsync(List<Horario> horarios)
     {
-        var response = await _httpClient.PostAsJsonAsync("horarios", horarios);
+        // Envolver el listado en un objeto con la propiedad "horarios"
+        var payload = new { horarios = horarios };
+        var response = await _httpClient.PostAsJsonAsync("horarios", payload);
         response.EnsureSuccessStatusCode();
     }
+
 }

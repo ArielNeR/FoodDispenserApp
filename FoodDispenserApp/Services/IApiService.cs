@@ -9,5 +9,5 @@ public interface IApiService
     Task<double> GetFoodLevelAsync();
     Task ActivateMotorAsync();
     Task<List<Horario>> GetHorariosAsync();
-    Task UpdateHorariosAsync(List<string> horarios);
+    Task UpdateHorariosAsync(List<Horario> horarios);
 }
