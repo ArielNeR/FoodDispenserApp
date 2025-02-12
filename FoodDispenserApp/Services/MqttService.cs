@@ -34,7 +34,7 @@ namespace FoodDispenserApp.Services
                 }
                 catch
                 {
-                    // Opcional: Registrar error de reconexión
+                    Console.WriteLine("Error al reconectar al broker MQTT. mqtt serviice");
                 }
             };
 
@@ -84,6 +84,7 @@ namespace FoodDispenserApp.Services
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
                 .WithTcpServer("04d1d89fd686436aba9da7fe351608aa.s1.eu.hivemq.cloud", 8883)
+                .WithCredentials("dispensador", "zX7@pL9#fY2!mQv$T3^dR8&kW6*BsC1")
                 .WithTlsOptions(tlsParameters) // Habilita TLS
                 .WithCleanSession()
                 .Build();

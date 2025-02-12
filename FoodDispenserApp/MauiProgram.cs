@@ -35,9 +35,6 @@ namespace FoodDispenserApp
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<MainPage>();
 
-            // Registra el servicio en segundo plano
-            builder.Services.AddHostedService<BackgroundDataService>();
-
 
 #if DEBUG
             builder.Logging.AddDebug();
