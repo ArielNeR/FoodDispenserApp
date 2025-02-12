@@ -12,15 +12,13 @@ public partial class MainPage : ContentPage
         BindingContext = viewModel;
 
         // Inicializar los gráficos
-        viewModel.TemperatureChart = new LineChart { Entries = viewModel.TemperatureHistory };
-        viewModel.HumidityChart = new LineChart { Entries = viewModel.HumidityHistory };
-        viewModel.FoodLevelChart = new LineChart { Entries = viewModel.FoodLevelHistory };
+        viewModel.TemperaturaChart = new Microcharts.LineChart { Entries = viewModel.TemperaturaHistory };
+        viewModel.HumedadChart = new Microcharts.LineChart { Entries = viewModel.HumedadHistory };
+        viewModel.UltrasonidoChart = new Microcharts.LineChart { Entries = viewModel.UltrasonidoHistory };
     }
 
     private async void OnHorariosClicked(object sender, EventArgs e)
     {
-        // Navegar a la página de Horarios
         await Navigation.PushAsync(new HorariosPage((MainViewModel)BindingContext));
     }
-
 }

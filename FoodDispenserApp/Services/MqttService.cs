@@ -1,8 +1,10 @@
 ﻿using FoodDispenserApp.Models;
 using MQTTnet;
 using MQTTnet.Protocol;
+using System;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace FoodDispenserApp.Services
 {
@@ -15,28 +17,24 @@ namespace FoodDispenserApp.Services
 
         public MqttService()
         {
-            // Asegúrate de tener instalado el paquete MQTTnet y de incluir "using MQTTnet;"
             var factory = new MqttClientFactory();
             _mqttClient = factory.CreateMqttClient();
 
-            // Configurar los manejadores de eventos usando lambdas asíncronas sin retornar Task.CompletedTask manualmente
             _mqttClient.ConnectedAsync += async e =>
             {
-                // Al conectar, suscribirse a los tópicos necesarios
                 await SubscribeToTopics();
             };
 
             _mqttClient.DisconnectedAsync += async e =>
             {
-                // Intento de reconexión automático después de 5 segundos
-                await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5));
                 try
                 {
-                    await _mqttClient.ConnectAsync(_mqttOptions);
+                    await ConnectAsync();
                 }
                 catch
                 {
-                    // Manejo de error de reconexión (puedes registrar el error aquí)
+                    // Registrar error si es necesario.
                 }
             };
 
@@ -44,8 +42,7 @@ namespace FoodDispenserApp.Services
             {
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                // Se asume que la API publica un JSON completo en el tópico "sensor/updates"
-                if (topic == "sensor/updates")
+                if (topic == "piscicultura/sensores")
                 {
                     try
                     {
@@ -57,15 +54,23 @@ namespace FoodDispenserApp.Services
                     }
                     catch (Exception)
                     {
-                        // Manejo de error al parsear el JSON
+                        Console.WriteLine("Error al procesar el mensaje MQTT");
                     }
                 }
+                await Task.CompletedTask;
             };
 
-            // Configuración del cliente MQTT (usa un broker público, por ejemplo, broker.hivemq.com)
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
-                .WithTcpServer("broker.hivemq.com", 1883)
+                .WithTcpServer("04d1d89fd686436aba9da7fe351608aa.s1.eu.hivemq.cloud", 8883)
+                .WithCredentials("dispensador", "zX7@pL9#fY2!mQv$T3^dR8&kW6*BsC1")
+                .WithTlsOptions(new MqttClientTlsOptions
+                {
+                    UseTls = true,
+                    SslProtocol = System.Security.Authentication.SslProtocols.Tls12,
+                    // Para pruebas: acepta cualquier certificado (no recomendado en producción)
+                    CertificateValidationHandler = context => true,
+                })
                 .WithCleanSession()
                 .Build();
         }
@@ -90,28 +95,26 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
-                // Suscribirse al tópico donde se envían las actualizaciones de sensores
                 var topicFilter = new MqttTopicFilterBuilder()
-                    .WithTopic("sensor/updates")
+                    .WithTopic("piscicultura/sensores")
                     .Build();
 
                 await _mqttClient.SubscribeAsync(topicFilter);
             }
         }
 
-        public async Task PublishActivateMotorAsync()
+        public async Task PublishHorariosUpdateAsync(List<Horario> horarios)
         {
-            if (_mqttClient.IsConnected)
-            {
-                var message = new MqttApplicationMessageBuilder()
-                    .WithTopic("commands/activate_motor")
-                    .WithPayload("") // Se puede enviar un payload vacío o un comando específico
-                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-                    .WithRetainFlag(false)
-                    .Build();
+            // Envolver el listado en un objeto para que el JSON tenga la propiedad "horarios"
+            var payload = JsonSerializer.Serialize(new { horarios = horarios });
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic("piscicultura/horarios/update")
+                .WithPayload(payload)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                .WithRetainFlag(true)
+                .Build();
 
-                await _mqttClient.PublishAsync(message);
-            }
+            await _mqttClient.PublishAsync(message);
         }
     }
 }

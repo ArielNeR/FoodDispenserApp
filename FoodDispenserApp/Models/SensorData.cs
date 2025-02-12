@@ -1,10 +1,28 @@
-﻿namespace FoodDispenserApp.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
-public class SensorData
+namespace FoodDispenserApp.Models
 {
-    public double Temperature { get; set; }
-    public double Humidity { get; set; }
-    public double FoodLevel { get; set; }
-    // Se asume que los horarios de dispensación se envían como lista de cadenas (por ejemplo, "08:00", "12:00", "18:00")
-    public List<Horario> Horarios { get; set; } = new();
+    public class SensorData
+    {
+        [JsonPropertyName("_id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("temperatura")]
+        public double Temperatura { get; set; }
+
+        [JsonPropertyName("humedad")]
+        public double Humedad { get; set; }
+
+        [JsonPropertyName("ultrasonido")]
+        public double Ultrasonido { get; set; }
+
+        [JsonPropertyName("timestamp")]
+        public DateTime Timestamp { get; set; }
+
+        // Aunque el mensaje MQTT no incluya horarios, esta propiedad permite
+        // mantener la edición local de horarios.
+        public List<Horario> Horarios { get; set; } = new();
+    }
 }

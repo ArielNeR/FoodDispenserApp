@@ -53,7 +53,7 @@ namespace FoodDispenserApp.ViewModels
             try
             {
                 // Enviar la lista actual de horarios a la API para actualizar
-                //await _apiService.UpdateHorariosAsync(Horarios.ToList());
+                await _apiService.UpdateHorariosAsync(Horarios.ToList());
                 // Vuelve a cargar para confirmar la actualización
                 await LoadHorariosAsync();
             }

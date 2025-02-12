@@ -15,9 +15,9 @@ public partial class HorariosEditPage : ContentPage
     {
         if (BindingContext is MainViewModel vm)
         {
-            // Agregar un nuevo horario con valores predeterminados (por ejemplo, 8:00 con duración 3)
+            // Agregar un nuevo horario con valores predeterminados
             vm.Horarios.Add(new Horario { Hora = 8, Minuto = 0, Duracion = 3 });
-            // Forzamos la notificación para actualizar la CollectionView (si fuera necesario)
+            // Reasigna la lista para forzar la actualización de la UI
             vm.Horarios = new List<Horario>(vm.Horarios);
         }
     }

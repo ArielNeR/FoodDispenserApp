@@ -6,7 +6,7 @@
              Title="Food Dispenser Monitor">
     <ScrollView>
         <StackLayout Padding="20" Spacing="20">
-            <!-- Indicador de conexión -->
+            <!-- Estado de conexión -->
             <Label Text="Estado de Conexión:" FontSize="Medium" />
             <Label Text="{Binding ConnectionStatus}" FontAttributes="Bold" TextColor="Green"/>
 
@@ -14,34 +14,33 @@
             <StackLayout Orientation="Horizontal" Spacing="10">
                 <StackLayout>
                     <Label Text="Temperatura:" />
-                    <Label Text="{Binding Temperature}" FontSize="Large" />
+                    <Label Text="{Binding Temperatura}" FontSize="Large" />
                 </StackLayout>
                 <StackLayout>
                     <Label Text="Humedad:" />
-                    <Label Text="{Binding Humidity}" FontSize="Large" />
+                    <Label Text="{Binding Humedad}" FontSize="Large" />
                 </StackLayout>
                 <StackLayout>
-                    <Label Text="Nivel de Comida:" />
-                    <Label Text="{Binding FoodLevel}" FontSize="Large" />
+                    <Label Text="Ultrasonido:" />
+                    <Label Text="{Binding Ultrasonido}" FontSize="Large" />
                 </StackLayout>
             </StackLayout>
 
-            <!-- Botones de acción -->
+            <!-- Botón para refrescar (opcional, MQTT envía en tiempo real) -->
             <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
-            <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" />
 
-            <!-- Nuevo botón para Horarios -->
+            <!-- Botón para ver/editar horarios -->
             <Button Text="Ver/Editar Horarios" Clicked="OnHorariosClicked" />
 
-            <!-- Gráficos estadísticos -->
+            <!-- Gráficos -->
             <Label Text="Gráfico de Temperatura" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding TemperatureChart}" HeightRequest="200" />
+            <chart:ChartView Chart="{Binding TemperaturaChart}" HeightRequest="200" />
 
             <Label Text="Gráfico de Humedad" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding HumidityChart}" HeightRequest="200" />
+            <chart:ChartView Chart="{Binding HumedadChart}" HeightRequest="200" />
 
-            <Label Text="Gráfico de Nivel de Comida" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding FoodLevelChart}" HeightRequest="200" />
+            <Label Text="Gráfico de Ultrasonido" FontSize="Medium" />
+            <chart:ChartView Chart="{Binding UltrasonidoChart}" HeightRequest="200" />
         </StackLayout>
     </ScrollView>
 </ContentPage>

@@ -11,7 +11,7 @@
             <CollectionView ItemsSource="{Binding Horarios}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Grid ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto" Padding="5">
+                        <Grid ColumnDefinitions="*,*,*,Auto" Padding="5">
                             <!-- Entry para Hora -->
                             <Entry Text="{Binding Hora, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Hora" />
                             <!-- Entry para Minuto -->

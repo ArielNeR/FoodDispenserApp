@@ -12,7 +12,6 @@ public partial class HorariosPage : ContentPage
 
     private async void OnEditHorariosClicked(object sender, EventArgs e)
     {
-        // Navegar a la página de edición de horarios
         await Navigation.PushAsync(new HorariosEditPage((MainViewModel)BindingContext));
     }
 }
