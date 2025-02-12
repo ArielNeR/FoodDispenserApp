@@ -8,12 +8,13 @@ using FoodDispenserApp.Services;
 using Microcharts;
 using SkiaSharp;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Networking;
 
 namespace FoodDispenserApp.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly IApiService _apiService;
         private readonly IMqttService _mqttService;
         private readonly IConnectivityService _connectivityService;
         private System.Timers.Timer _refreshTimer;
@@ -39,14 +40,14 @@ namespace FoodDispenserApp.ViewModels
             set { _foodLevel = value; OnPropertyChanged(); }
         }
 
-        private string _connectionStatus = "Desconocido";
+        private string _connectionStatus = "Esperando actualización...";
         public string ConnectionStatus
         {
             get => _connectionStatus;
             set { _connectionStatus = value; OnPropertyChanged(); }
         }
 
-        // Historial de datos para gráficos, inicializados con un valor predeterminado
+        // Historial de datos para gráficos, inicializados con un valor predeterminado.
         private ObservableCollection<ChartEntry> _temperatureHistory = new ObservableCollection<ChartEntry>
         {
             new ChartEntry(0)
@@ -114,11 +115,11 @@ namespace FoodDispenserApp.ViewModels
             set { _foodLevelChart = value; OnPropertyChanged(); }
         }
 
+        // Comandos
         public ICommand RefreshCommand { get; }
         public ICommand ActivateMotorCommand { get; }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
+        // Lista de horarios recibida vía MQTT
         private List<Horario> _horarios = new();
         public List<Horario> Horarios
         {
@@ -126,122 +127,80 @@ namespace FoodDispenserApp.ViewModels
             set { _horarios = value; OnPropertyChanged(); }
         }
 
-        // Comando para guardar los horarios
-        public ICommand SaveHorariosCommand { get; }
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public MainViewModel(IApiService apiService,
-                             IMqttService mqttService,
-                             IConnectivityService connectivityService)
+        public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService)
         {
-            _apiService = apiService;
             _mqttService = mqttService;
             _connectivityService = connectivityService;
 
             RefreshCommand = new Command(async () => await RefreshDataAsync());
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
-            SaveHorariosCommand = new Command(async () => await SaveHorariosAsync());
 
-            // Suscribirse a datos vía MQTT (actualiza los datos y el historial)
+            // Suscribirse a los datos recibidos vía MQTT para actualizar las propiedades.
             _mqttService.OnSensorDataReceived += (s, data) =>
             {
                 Temperature = data.Temperature;
                 Humidity = data.Humidity;
-                FoodLevel = data.FoodLevel;
+                FoodLevel = data.Ultrasonido;
                 Horarios = data.Horarios;
                 UpdateHistory(data);
             };
 
-            ConnectionStatus = "Esperando actualización...";
-
+            // Inicializa la conexión vía MQTT.
             InitializeRefresh();
 
-            _refreshTimer = new System.Timers.Timer(180000); // 3 minutos
+            // Configurar un timer para reintentar la conexión cada 3 minutos.
+            _refreshTimer = new System.Timers.Timer(180000);
             _refreshTimer.Elapsed += async (s, e) => await RefreshDataAsync();
             _refreshTimer.AutoReset = true;
             _refreshTimer.Enabled = true;
         }
 
-        private async Task SaveHorariosAsync()
-        {
-            try
-            {
-                await _apiService.UpdateHorariosAsync(Horarios);
-                await Application.Current.MainPage.DisplayAlert("Éxito", "Horarios actualizados correctamente", "OK");
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron actualizar los horarios: " + ex.Message, "OK");
-            }
-        }
-
-        // Método para iniciar el primer refresco con un retraso de 3 segundos
+        // Método para iniciar la conexión con un retraso inicial.
         private async void InitializeRefresh()
         {
             await Task.Delay(3000);
             await RefreshDataAsync();
         }
 
-        // Método para refrescar datos y actualizar el estado de conexión
+        // Método para refrescar la conexión MQTT.
         public async Task RefreshDataAsync()
         {
-            // Primero, verificar si hay conexión a Internet
-            var netAccess = Connectivity.Current.NetworkAccess;
-            if (netAccess != NetworkAccess.Internet)
+            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
             {
                 ConnectionStatus = "Sin conexión a Internet";
                 return;
             }
 
-            // Si hay internet, determinamos si es conexión local o no
-            if (_connectivityService.IsLocal)
+            try
             {
-                try
-                {
-                    // Actualizar datos vía HTTP
-                    Temperature = await _apiService.GetTemperatureAsync();
-                    Humidity = await _apiService.GetHumidityAsync();
-                    FoodLevel = await _apiService.GetFoodLevelAsync();
-                    Horarios = await _apiService.GetHorariosAsync();
-
-                    // Construir un objeto SensorData para actualizar el historial
-                    SensorData data = new SensorData
-                    {
-                        Temperature = Temperature,
-                        Humidity = Humidity,
-                        FoodLevel = FoodLevel,
-                        Horarios = Horarios
-                    };
-                    UpdateHistory(data);
-
-                    // Actualizar el estado de conexión con éxito
-                    ConnectionStatus = "Conexión exitosa (HTTP Local) - " + DateTime.Now.ToString("HH:mm:ss");
-                }
-                catch (Exception ex)
-                {
-                    ConnectionStatus = "Error en la conexión HTTP: " + ex.Message;
-                }
+                await _mqttService.ConnectAsync();
+                ConnectionStatus = "Conexión remota (MQTT) - " + DateTime.Now.ToString("HH:mm:ss");
             }
-            else
+            catch (Exception ex)
             {
-                // En este caso, hay conexión a Internet pero no estamos en la red local.
-                // Se intenta establecer la conexión vía MQTT.
-                try
-                {
-                    await _mqttService.ConnectAsync();
-                    ConnectionStatus = "Conexión remota (MQTT) - " + DateTime.Now.ToString("HH:mm:ss");
-                }
-                catch (Exception ex)
-                {
-                    ConnectionStatus = "Error en la conexión MQTT: " + ex.Message;
-                }
+                ConnectionStatus = "Error en la conexión MQTT: " + ex.Message;
             }
         }
 
+        // Método para activar el motor usando MQTT.
+        public async Task ActivateMotorAsync()
+        {
+            try
+            {
+                await _mqttService.PublishActivateMotorAsync();
+            }
+            catch (Exception ex)
+            {
+                // Aquí podrías agregar lógica de manejo de error o notificar al usuario.
+            }
+        }
 
-        // Método para actualizar el historial y los gráficos, limitando a 10 datos
+        // Actualiza el historial de datos y reconstruye los gráficos.
         private void UpdateHistory(SensorData data)
         {
-            // Si las colecciones solo tienen el valor predeterminado, se limpian para reemplazarlo
+            // Si las colecciones tienen solo el valor predeterminado, se limpian.
             if (TemperatureHistory.Count == 1 && TemperatureHistory[0].ValueLabel == "0")
                 TemperatureHistory.Clear();
             if (HumidityHistory.Count == 1 && HumidityHistory[0].ValueLabel == "0")
@@ -249,7 +208,7 @@ namespace FoodDispenserApp.ViewModels
             if (FoodLevelHistory.Count == 1 && FoodLevelHistory[0].ValueLabel == "0")
                 FoodLevelHistory.Clear();
 
-            // Agregar los nuevos datos con la hora actual como etiqueta
+            // Agregar nuevos datos con la hora actual como etiqueta.
             TemperatureHistory.Add(new ChartEntry((float)data.Temperature)
             {
                 Label = DateTime.Now.ToString("HH:mm"),
@@ -262,14 +221,14 @@ namespace FoodDispenserApp.ViewModels
                 ValueLabel = data.Humidity.ToString(),
                 Color = SKColor.Parse("#0000FF")
             });
-            FoodLevelHistory.Add(new ChartEntry((float)data.FoodLevel)
+            FoodLevelHistory.Add(new ChartEntry((float)data.Ultrasonido)
             {
                 Label = DateTime.Now.ToString("HH:mm"),
-                ValueLabel = data.FoodLevel.ToString(),
+                ValueLabel = data.Ultrasonido.ToString(),
                 Color = SKColor.Parse("#00FF00")
             });
 
-            // Limitar la cantidad de entradas a 10 (eliminando las más antiguas)
+            // Limitar a 10 entradas eliminando las más antiguas.
             while (TemperatureHistory.Count > 10)
                 TemperatureHistory.RemoveAt(0);
             while (HumidityHistory.Count > 10)
@@ -277,25 +236,10 @@ namespace FoodDispenserApp.ViewModels
             while (FoodLevelHistory.Count > 10)
                 FoodLevelHistory.RemoveAt(0);
 
-            // Actualizar (reconstruir) los gráficos para que reflejen los cambios
+            // Reconstruir los gráficos.
             TemperatureChart = new LineChart { Entries = TemperatureHistory };
             HumidityChart = new LineChart { Entries = HumidityHistory };
             FoodLevelChart = new LineChart { Entries = FoodLevelHistory };
-        }
-
-        public async Task ActivateMotorAsync()
-        {
-            try
-            {
-                if (_connectivityService.IsLocal)
-                    await _apiService.ActivateMotorAsync();
-                else
-                    await _mqttService.PublishActivateMotorAsync();
-            }
-            catch (Exception)
-            {
-                // Manejo de error en la activación del motor.
-            }
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)

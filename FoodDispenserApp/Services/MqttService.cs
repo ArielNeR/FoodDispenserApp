@@ -1,6 +1,7 @@
 ﻿using FoodDispenserApp.Models;
 using MQTTnet;
 using MQTTnet.Protocol;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 
@@ -15,28 +16,25 @@ namespace FoodDispenserApp.Services
 
         public MqttService()
         {
-            // Asegúrate de tener instalado el paquete MQTTnet y de incluir "using MQTTnet;"
+            // Se utiliza MqttFactory (la forma actual recomendada) para crear el cliente.
             var factory = new MqttClientFactory();
             _mqttClient = factory.CreateMqttClient();
 
-            // Configurar los manejadores de eventos usando lambdas asíncronas sin retornar Task.CompletedTask manualmente
             _mqttClient.ConnectedAsync += async e =>
             {
-                // Al conectar, suscribirse a los tópicos necesarios
                 await SubscribeToTopics();
             };
 
             _mqttClient.DisconnectedAsync += async e =>
             {
-                // Intento de reconexión automático después de 5 segundos
-                await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5));
                 try
                 {
                     await _mqttClient.ConnectAsync(_mqttOptions);
                 }
                 catch
                 {
-                    // Manejo de error de reconexión (puedes registrar el error aquí)
+                    // Opcional: Registrar error de reconexión
                 }
             };
 
@@ -44,28 +42,49 @@ namespace FoodDispenserApp.Services
             {
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                // Se asume que la API publica un JSON completo en el tópico "sensor/updates"
-                if (topic == "sensor/updates")
+                try
                 {
-                    try
+                    if (topic == "piscicultura/sensores")
                     {
+                        // Deserializar datos de sensores
                         var sensorData = JsonSerializer.Deserialize<SensorData>(payload);
                         if (sensorData != null)
                         {
                             OnSensorDataReceived?.Invoke(this, sensorData);
                         }
                     }
-                    catch (Exception)
+                    else if (topic == "horarios/update")
                     {
-                        // Manejo de error al parsear el JSON
+                        // Deserializar la actualización de horarios
+                        var horariosResponse = JsonSerializer.Deserialize<HorariosResponse>(payload);
+                        if (horariosResponse != null)
+                        {
+                            var data = new SensorData { Horarios = horariosResponse.Horarios };
+                            OnSensorDataReceived?.Invoke(this, data);
+                        }
                     }
+                }
+                catch (Exception)
+                {
+                    // Manejar error de deserialización si es necesario
                 }
             };
 
-            // Configuración del cliente MQTT (usa un broker público, por ejemplo, broker.hivemq.com)
+            // Configuración TLS: crear parámetros para habilitar TLS con SslProtocols.Tls12.
+            var tlsParameters = new MqttClientTlsOptions
+            {
+                UseTls = true,
+                SslProtocol = SslProtocols.Tls12,
+                // Opcional: para propósitos de prueba, puedes aceptar todos los certificados.
+                CertificateValidationHandler = context => true
+            };
+
+            // Configuración para conectarse al broker HiveMQ vía TLS.
+            // Si se requieren credenciales, agregar el método .WithCredentials("usuario", "contraseña")
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
-                .WithTcpServer("broker.hivemq.com", 1883)
+                .WithTcpServer("04d1d89fd686436aba9da7fe351608aa.s1.eu.hivemq.cloud", 8883)
+                .WithTlsOptions(tlsParameters) // Habilita TLS
                 .WithCleanSession()
                 .Build();
         }
@@ -90,12 +109,13 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
-                // Suscribirse al tópico donde se envían las actualizaciones de sensores
-                var topicFilter = new MqttTopicFilterBuilder()
-                    .WithTopic("sensor/updates")
+                // Construir las opciones de suscripción usando el builder adecuado.
+                var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("piscicultura/sensores")
+                    .WithTopicFilter("horarios/update")
                     .Build();
 
-                await _mqttClient.SubscribeAsync(topicFilter);
+                await _mqttClient.SubscribeAsync(subscribeOptions);
             }
         }
 
@@ -105,7 +125,7 @@ namespace FoodDispenserApp.Services
             {
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("commands/activate_motor")
-                    .WithPayload("") // Se puede enviar un payload vacío o un comando específico
+                    .WithPayload("") // Se puede enviar un payload específico si es necesario
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
                     .WithRetainFlag(false)
                     .Build();
