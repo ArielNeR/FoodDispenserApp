@@ -70,22 +70,16 @@ namespace FoodDispenserApp.Services
                 }
             };
 
-            // Configuración TLS: crear parámetros para habilitar TLS con SslProtocols.Tls12.
-            var tlsParameters = new MqttClientTlsOptions
-            {
-                UseTls = true,
-                SslProtocol = SslProtocols.Tls12,
-                // Opcional: para propósitos de prueba, puedes aceptar todos los certificados.
-                CertificateValidationHandler = context => true
-            };
-
-            // Configuración para conectarse al broker HiveMQ vía TLS.
-            // Si se requieren credenciales, agregar el método .WithCredentials("usuario", "contraseña")
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
                 .WithTcpServer("04d1d89fd686436aba9da7fe351608aa.s1.eu.hivemq.cloud", 8883)
                 .WithCredentials("dispensador", "zX7@pL9#fY2!mQv$T3^dR8&kW6*BsC1")
-                .WithTlsOptions(tlsParameters) // Habilita TLS
+                .WithTlsOptions(new MqttClientTlsOptions
+                {
+                    UseTls = true,
+                    SslProtocol = SslProtocols.Tls12,
+                    CertificateValidationHandler = context => true,
+                })
                 .WithCleanSession()
                 .Build();
         }
