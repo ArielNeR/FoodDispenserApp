@@ -11,6 +11,8 @@ namespace FoodDispenserApp.ViewModels
     {
         private readonly IApiService _apiService;
 
+        private readonly IMqttService _mqttService;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // Colección observable para mostrar la lista de horarios
@@ -21,15 +23,30 @@ namespace FoodDispenserApp.ViewModels
         public ICommand UpdateHorariosCommand { get; }
         public ICommand EditHorariosCommand { get; } // Aquí puedes implementar la lógica de edición
 
-        public HorariosViewModel(IApiService apiService)
+        public HorariosViewModel(IApiService apiService, IMqttService mqttService)
         {
             _apiService = apiService;
+            _mqttService = mqttService;
+
             LoadHorariosCommand = new Command(async () => await LoadHorariosAsync());
             UpdateHorariosCommand = new Command(async () => await UpdateHorariosAsync());
             EditHorariosCommand = new Command(OnEditHorarios);
-            // Cargar horarios al iniciar
+
+            _mqttService.OnHorariosReceived += (sender, horariosResponse) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Horarios.Clear();
+                    foreach (var h in horariosResponse.Horarios)
+                    {
+                        Horarios.Add(h);
+                    }
+                });
+            };
+
             Task.Run(async () => await LoadHorariosAsync());
         }
+
 
         private async Task LoadHorariosAsync()
         {
@@ -52,16 +69,15 @@ namespace FoodDispenserApp.ViewModels
         {
             try
             {
-                // Enviar la lista actual de horarios a la API para actualizar
-                //await _apiService.UpdateHorariosAsync(Horarios.ToList());
-                // Vuelve a cargar para confirmar la actualización
+                await _mqttService.PublishHorariosAsync(Horarios.ToList());
                 await LoadHorariosAsync();
             }
             catch (Exception ex)
             {
-                // Manejo de error (mostrar mensaje, etc.)
+                Console.WriteLine($"Error al actualizar horarios: {ex.Message}");
             }
         }
+
 
         private void OnEditHorarios()
         {

@@ -13,6 +13,8 @@ namespace FoodDispenserApp.Services
         private readonly MqttClientOptions _mqttOptions;
         public bool IsConnected => _mqttClient.IsConnected;
         public event EventHandler<SensorData>? OnSensorDataReceived;
+        public event EventHandler<HorariosResponse>? OnHorariosReceived;
+
 
         public MqttService()
         {
@@ -42,33 +44,33 @@ namespace FoodDispenserApp.Services
             {
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
                 try
                 {
-                    if (topic == "piscicultura/sensores")
+                    if (topic == "dispensador/sensores")
                     {
-                        // Deserializar datos de sensores
                         var sensorData = JsonSerializer.Deserialize<SensorData>(payload);
                         if (sensorData != null)
                         {
                             OnSensorDataReceived?.Invoke(this, sensorData);
                         }
                     }
-                    else if (topic == "horarios/update")
+                    else if (topic == "dispensador/horarios")
                     {
-                        // Deserializar la actualización de horarios
                         var horariosResponse = JsonSerializer.Deserialize<HorariosResponse>(payload);
                         if (horariosResponse != null)
                         {
-                            var data = new SensorData { Horarios = horariosResponse.Horarios };
-                            OnSensorDataReceived?.Invoke(this, data);
+                            OnHorariosReceived?.Invoke(this, horariosResponse);
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Manejar error de deserialización si es necesario
+                    Console.WriteLine($"Error al procesar mensaje MQTT: {ex.Message}");
                 }
             };
+
+
 
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
@@ -104,10 +106,9 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
-                // Construir las opciones de suscripción usando el builder adecuado.
                 var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
-                    .WithTopicFilter("piscicultura/sensores")
-                    .WithTopicFilter("horarios/update")
+                    .WithTopicFilter("dispensador/sensores")
+                    .WithTopicFilter("dispensador/horarios")
                     .Build();
 
                 await _mqttClient.SubscribeAsync(subscribeOptions);
@@ -120,7 +121,7 @@ namespace FoodDispenserApp.Services
             {
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("commands/activate_motor")
-                    .WithPayload("") // Se puede enviar un payload específico si es necesario
+                    .WithPayload("")
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
                     .WithRetainFlag(false)
                     .Build();
@@ -128,5 +129,24 @@ namespace FoodDispenserApp.Services
                 await _mqttClient.PublishAsync(message);
             }
         }
+
+
+
+        public async Task PublishHorariosAsync(List<Horario> horarios)
+        {
+            if (_mqttClient.IsConnected)
+            {
+                var payload = JsonSerializer.Serialize(new { horarios });
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic("dispensador/horarios")
+                    .WithPayload(payload)
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                    .WithRetainFlag(true)  // Para que el mensaje se mantenga en el broker
+                    .Build();
+
+                await _mqttClient.PublishAsync(message);
+            }
+        }
+
     }
 }

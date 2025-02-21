@@ -17,7 +17,7 @@ namespace FoodDispenserApp.ViewModels
     {
         private readonly IMqttService _mqttService;
         private readonly IConnectivityService _connectivityService;
-        private bool _isRefreshing = false; // Para evitar refrescos concurrentes
+        private bool _isRefreshing = false; // Evita refrescos concurrentes
 
         private double _temperature;
         public double Temperature
@@ -47,35 +47,9 @@ namespace FoodDispenserApp.ViewModels
             set { _connectionStatus = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<ChartEntry> TemperatureHistory { get; set; } = new ObservableCollection<ChartEntry>
-        {
-            new ChartEntry(0)
-            {
-                Label = "Sin datos",
-                ValueLabel = "0",
-                Color = SKColor.Parse("#FF0000")
-            }
-        };
-
-        public ObservableCollection<ChartEntry> HumidityHistory { get; set; } = new ObservableCollection<ChartEntry>
-        {
-            new ChartEntry(0)
-            {
-                Label = "Sin datos",
-                ValueLabel = "0",
-                Color = SKColor.Parse("#0000FF")
-            }
-        };
-
-        public ObservableCollection<ChartEntry> FoodLevelHistory { get; set; } = new ObservableCollection<ChartEntry>
-        {
-            new ChartEntry(0)
-            {
-                Label = "Sin datos",
-                ValueLabel = "0",
-                Color = SKColor.Parse("#00FF00")
-            }
-        };
+        public ObservableCollection<ChartEntry> TemperatureHistory { get; set; } = new ObservableCollection<ChartEntry>();
+        public ObservableCollection<ChartEntry> HumidityHistory { get; set; } = new ObservableCollection<ChartEntry>();
+        public ObservableCollection<ChartEntry> FoodLevelHistory { get; set; } = new ObservableCollection<ChartEntry>();
 
         private Chart _temperatureChart;
         public Chart TemperatureChart
@@ -110,11 +84,6 @@ namespace FoodDispenserApp.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        // Para controlar la actualización (basada en timestamp)
-        private DateTime _lastTimestamp = DateTime.MinValue;
-        private bool _receivedValidData = false;
-
-
         public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService)
         {
             _mqttService = mqttService;
@@ -123,39 +92,38 @@ namespace FoodDispenserApp.ViewModels
             RefreshCommand = new Command(async () => await RefreshDataAsync());
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
 
-            // Suscribirse a los datos vía MQTT
-            _mqttService.OnSensorDataReceived += (s, data) =>
+            // Suscribirse a los eventos MQTT
+            _mqttService.OnSensorDataReceived += (sender, sensorData) =>
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    // Actualizar horarios si el mensaje los contiene (sin importar los otros valores)
-                    if (data.Horarios != null && data.Horarios.Count > 0)
-                    {
-                        Horarios = data.Horarios;
-                    }
+                    Temperature = sensorData.Temperature;
+                    Humidity = sensorData.Humidity;
+                    FoodLevel = sensorData.Ultrasonido;
 
-                    // Actualizar datos de sensores solo si son válidos (no todos 0)
-                    bool isSensorDataValid = data.Temperature != 0 || data.Humidity != 0 || data.Ultrasonido != 0;
-                    if (isSensorDataValid)
+                    UpdateHistory(sensorData);
+                });
+            };
+
+            _mqttService.OnHorariosReceived += (sender, horariosResponse) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (horariosResponse?.Horarios != null && horariosResponse.Horarios.Any())
                     {
-                        Temperature = data.Temperature;
-                        Humidity = data.Humidity;
-                        FoodLevel = data.Ultrasonido;
-                        UpdateHistory(data);
-                        _receivedValidData = true;
+                        Horarios.Clear();
+                        Horarios.AddRange(horariosResponse.Horarios);
                     }
                 });
             };
 
 
-            // Conectar al iniciar
+            // Conectar y mantener la conexión activa
             InitializeRefresh();
-
-            // Programar un refresco cada minuto usando Device.StartTimer en el hilo UI.
             Device.StartTimer(TimeSpan.FromMinutes(1), () =>
             {
                 _ = RefreshDataAsync();
-                return true; // Para continuar con el timer
+                return true; // Continuar con el timer
             });
         }
 
@@ -167,8 +135,7 @@ namespace FoodDispenserApp.ViewModels
 
         public async Task RefreshDataAsync()
         {
-            if (_isRefreshing)
-                return;
+            if (_isRefreshing) return;
 
             _isRefreshing = true;
 
@@ -184,17 +151,26 @@ namespace FoodDispenserApp.ViewModels
 
             try
             {
-                await _mqttService.ConnectAsync();
+                if (!_mqttService.IsConnected)
+                {
+                    await _mqttService.ConnectAsync();
+
+                    if (_mqttService.IsConnected)
+                    {
+                        await _mqttService.SubscribeToTopics();
+                    }
+                }
+
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    ConnectionStatus = "Conexión remota (MQTT) - " + DateTime.Now.ToString("HH:mm:ss");
+                    ConnectionStatus = $"Conectado al broker MQTT - {DateTime.Now:HH:mm:ss}";
                 });
             }
             catch (Exception ex)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    ConnectionStatus = "Error en la conexión MQTT: " + ex.Message;
+                    ConnectionStatus = $"Error en la conexión MQTT: {ex.Message}";
                 });
             }
             finally
@@ -203,41 +179,57 @@ namespace FoodDispenserApp.ViewModels
             }
         }
 
+
         public async Task ActivateMotorAsync()
         {
             try
             {
-                await _mqttService.PublishActivateMotorAsync();
+                if (_mqttService.IsConnected)
+                {
+                    await _mqttService.PublishActivateMotorAsync();
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        ConnectionStatus = "Motor activado";
+                    });
+                }
+                else
+                {
+                    ConnectionStatus = "No hay conexión con el broker MQTT";
+                }
             }
             catch (Exception ex)
             {
-                // Opcional: Notificar error al usuario.
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    ConnectionStatus = $"Error al activar el motor: {ex.Message}";
+                });
             }
         }
 
         private void UpdateHistory(SensorData data)
         {
-            // Limpiar el historial si solo contiene el valor inicial.
-            if (TemperatureHistory.Count == 1 && TemperatureHistory[0].ValueLabel == "0")
-                TemperatureHistory.Clear();
-            if (HumidityHistory.Count == 1 && HumidityHistory[0].ValueLabel == "0")
-                HumidityHistory.Clear();
-            if (FoodLevelHistory.Count == 1 && FoodLevelHistory[0].ValueLabel == "0")
-                FoodLevelHistory.Clear();
+            if (data == null)
+                return;
 
-            // Agregar la nueva entrada con la hora actual como etiqueta.
+            // Asegurar que las listas no estén vacías antes de operar
+            if (!TemperatureHistory.Any()) TemperatureHistory.Clear();
+            if (!HumidityHistory.Any()) HumidityHistory.Clear();
+            if (!FoodLevelHistory.Any()) FoodLevelHistory.Clear();
+
             TemperatureHistory.Add(new ChartEntry((float)data.Temperature)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
                 ValueLabel = data.Temperature.ToString(),
                 Color = SKColor.Parse("#FF0000")
             });
+
             HumidityHistory.Add(new ChartEntry((float)data.Humidity)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
                 ValueLabel = data.Humidity.ToString(),
                 Color = SKColor.Parse("#0000FF")
             });
+
             FoodLevelHistory.Add(new ChartEntry((float)data.Ultrasonido)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
@@ -245,19 +237,16 @@ namespace FoodDispenserApp.ViewModels
                 Color = SKColor.Parse("#00FF00")
             });
 
-            // Mantener solo las 10 entradas más recientes.
-            while (TemperatureHistory.Count > 10)
-                TemperatureHistory.RemoveAt(0);
-            while (HumidityHistory.Count > 10)
-                HumidityHistory.RemoveAt(0);
-            while (FoodLevelHistory.Count > 10)
-                FoodLevelHistory.RemoveAt(0);
+            // **Verificación adicional** antes de intentar eliminar elementos
+            if (TemperatureHistory.Count > 10) TemperatureHistory.RemoveAt(0);
+            if (HumidityHistory.Count > 10) HumidityHistory.RemoveAt(0);
+            if (FoodLevelHistory.Count > 10) FoodLevelHistory.RemoveAt(0);
 
-            // Reconstruir los gráficos.
             TemperatureChart = new LineChart { Entries = TemperatureHistory };
             HumidityChart = new LineChart { Entries = HumidityHistory };
             FoodLevelChart = new LineChart { Entries = FoodLevelHistory };
         }
+
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)
         {

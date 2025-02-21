@@ -1,7 +1,11 @@
-﻿namespace FoodDispenserApp.Models
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace FoodDispenserApp.Models
 {
     public class HorariosResponse
     {
-        public List<Horario> Horarios { get; set; }
+        [JsonPropertyName("horarios")]
+        public List<Horario> Horarios { get; set; } = new();
     }
 }
