@@ -112,6 +112,8 @@ namespace FoodDispenserApp.ViewModels
 
         // Para controlar la actualización (basada en timestamp)
         private DateTime _lastTimestamp = DateTime.MinValue;
+        private bool _receivedValidData = false;
+
 
         public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService)
         {
@@ -124,21 +126,27 @@ namespace FoodDispenserApp.ViewModels
             // Suscribirse a los datos vía MQTT
             _mqttService.OnSensorDataReceived += (s, data) =>
             {
-                // Si el mensaje es "nuevo" (timestamp posterior) lo procesamos
-                if (data.Timestamp <= _lastTimestamp)
-                    return;
-
-                _lastTimestamp = data.Timestamp;
-
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Temperature = data.Temperature;
-                    Humidity = data.Humidity;
-                    FoodLevel = data.Ultrasonido;
-                    Horarios = data.Horarios;
-                    UpdateHistory(data);
+                    // Actualizar horarios si el mensaje los contiene (sin importar los otros valores)
+                    if (data.Horarios != null && data.Horarios.Count > 0)
+                    {
+                        Horarios = data.Horarios;
+                    }
+
+                    // Actualizar datos de sensores solo si son válidos (no todos 0)
+                    bool isSensorDataValid = data.Temperature != 0 || data.Humidity != 0 || data.Ultrasonido != 0;
+                    if (isSensorDataValid)
+                    {
+                        Temperature = data.Temperature;
+                        Humidity = data.Humidity;
+                        FoodLevel = data.Ultrasonido;
+                        UpdateHistory(data);
+                        _receivedValidData = true;
+                    }
                 });
             };
+
 
             // Conectar al iniciar
             InitializeRefresh();
