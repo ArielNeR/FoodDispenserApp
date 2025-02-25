@@ -2,8 +2,6 @@
 using FoodDispenserApp.ViewModels;
 using Microcharts.Maui;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-
 
 namespace FoodDispenserApp
 {
@@ -23,18 +21,15 @@ namespace FoodDispenserApp
 
             builder.Services.AddHttpClient<IApiService, ApiService>(client =>
             {
-                // Cambia la URL base según la IP o nombre de host de tu Raspberry Pi
                 client.BaseAddress = new Uri("http://192.168.100.82:8000/");
             });
 
-            // Registra los servicios
             builder.Services.AddSingleton<IMqttService, MqttService>();
             builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
-
-            // Registra el ViewModel y la página principal
+            builder.Services.AddHostedService<BackgroundDataService>();
             builder.Services.AddSingleton<MainViewModel>();
+            builder.Services.AddSingleton<HorariosViewModel>();
             builder.Services.AddSingleton<MainPage>();
-
 
 #if DEBUG
             builder.Logging.AddDebug();

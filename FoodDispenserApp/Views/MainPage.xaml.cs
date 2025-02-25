@@ -6,10 +6,14 @@ namespace FoodDispenserApp;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(MainViewModel viewModel)
+
+    private readonly IServiceProvider _serviceProvider;
+
+    public MainPage(MainViewModel viewModel, IServiceProvider serviceProvider)
     {
         InitializeComponent();
         BindingContext = viewModel;
+        _serviceProvider = serviceProvider;
 
         // Inicializar los gráficos
         viewModel.TemperatureChart = new LineChart { Entries = viewModel.TemperatureHistory };
@@ -19,8 +23,8 @@ public partial class MainPage : ContentPage
 
     private async void OnHorariosClicked(object sender, EventArgs e)
     {
-        // Navegar a la página de Horarios
-        await Navigation.PushAsync(new HorariosPage((MainViewModel)BindingContext));
+        var horariosViewModel = _serviceProvider.GetRequiredService<HorariosViewModel>();
+        await Navigation.PushAsync(new HorariosPage(horariosViewModel));
     }
 
 }

@@ -54,13 +54,21 @@ namespace FoodDispenserApp.Services
                         {
                             OnSensorDataReceived?.Invoke(this, sensorData);
                         }
+                        else
+                        {
+                            Console.WriteLine("⚠️ Datos de sensores recibidos pero vacíos.");
+                        }
                     }
                     else if (topic == "dispensador/horarios")
                     {
                         var horariosResponse = JsonSerializer.Deserialize<HorariosResponse>(payload);
-                        if (horariosResponse != null)
+                        if (horariosResponse?.Horarios != null && horariosResponse.Horarios.Any())
                         {
                             OnHorariosReceived?.Invoke(this, horariosResponse);
+                        }
+                        else
+                        {
+                            Console.WriteLine("⚠️ Datos de horarios recibidos pero vacíos.");
                         }
                     }
                 }
@@ -69,6 +77,7 @@ namespace FoodDispenserApp.Services
                     Console.WriteLine($"Error al procesar mensaje MQTT: {ex.Message}");
                 }
             };
+
 
 
 

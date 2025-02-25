@@ -10,18 +10,15 @@ namespace FoodDispenserApp.ViewModels
     public class HorariosViewModel : INotifyPropertyChanged
     {
         private readonly IApiService _apiService;
-
         private readonly IMqttService _mqttService;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public ObservableCollection<Horario> Horarios { get; set; } = new();
 
-        // Colección observable para mostrar la lista de horarios
-        public ObservableCollection<Horario> Horarios { get; set; } = new ObservableCollection<Horario>();
-
-        // Comandos para cargar y actualizar horarios
         public ICommand LoadHorariosCommand { get; }
         public ICommand UpdateHorariosCommand { get; }
-        public ICommand EditHorariosCommand { get; } // Aquí puedes implementar la lógica de edición
+        public ICommand EditHorariosCommand { get; }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public HorariosViewModel(IApiService apiService, IMqttService mqttService)
         {
@@ -47,7 +44,6 @@ namespace FoodDispenserApp.ViewModels
             Task.Run(async () => await LoadHorariosAsync());
         }
 
-
         private async Task LoadHorariosAsync()
         {
             try
@@ -61,7 +57,7 @@ namespace FoodDispenserApp.ViewModels
             }
             catch (Exception ex)
             {
-                // Aquí podrías mostrar un mensaje o registrar el error
+                await Application.Current.MainPage.DisplayAlert("Error", $"No se pudieron cargar los horarios: {ex.Message}", "OK");
             }
         }
 
@@ -74,15 +70,13 @@ namespace FoodDispenserApp.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al actualizar horarios: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Error", $"Error al actualizar horarios: {ex.Message}", "OK");
             }
         }
 
-
         private void OnEditHorarios()
         {
-            // Aquí puedes implementar la lógica para editar un horario:
-            // Por ejemplo, navegar a una página de edición o mostrar un diálogo modal.
+            // Lógica para edición si es necesario (puede navegar a HorariosEditPage desde la UI)
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)

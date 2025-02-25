@@ -4,7 +4,7 @@ namespace FoodDispenserApp.Views;
 
 public partial class HorariosPage : ContentPage
 {
-    public HorariosPage(MainViewModel viewModel)
+    public HorariosPage(HorariosViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -12,7 +12,6 @@ public partial class HorariosPage : ContentPage
 
     private async void OnEditHorariosClicked(object sender, EventArgs e)
     {
-        // Navegar a la página de edición de horarios
-        await Navigation.PushAsync(new HorariosEditPage((MainViewModel)BindingContext));
+        await Navigation.PushAsync(new HorariosEditPage((HorariosViewModel)BindingContext));
     }
 }
