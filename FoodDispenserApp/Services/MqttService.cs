@@ -4,6 +4,7 @@ using MQTTnet.Protocol;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FoodDispenserApp.Services
 {
@@ -89,7 +90,7 @@ namespace FoodDispenserApp.Services
                     SslProtocol = SslProtocols.Tls12,
                     CertificateValidationHandler = context => true,
                 })
-                .WithCleanSession(false) // Cambiar a false para mantener el estado de la suscripción
+                .WithCleanSession(false)
                 .Build();
         }
 
@@ -137,7 +138,7 @@ namespace FoodDispenserApp.Services
                     .WithTopic("commands/activate_motor")
                     .WithPayload("")
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-                    .WithRetainFlag(false) // No retenido, ya que es un comando
+                    .WithRetainFlag(false)
                     .Build();
 
                 await _mqttClient.PublishAsync(message);
@@ -149,12 +150,18 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
-                var payload = JsonSerializer.Serialize(new { horarios });
+                // Serializar directamente como una lista con claves en minúsculas
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Convierte a minúsculas iniciales (hora, minuto, duracion)
+                };
+                var payload = JsonSerializer.Serialize(horarios, options); // Serializa la lista sin envoltorio
+
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("dispensador/horarios")
                     .WithPayload(payload)
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-                    .WithRetainFlag(true) // Asegurar que el mensaje sea retenido
+                    .WithRetainFlag(true)
                     .Build();
 
                 await _mqttClient.PublishAsync(message);

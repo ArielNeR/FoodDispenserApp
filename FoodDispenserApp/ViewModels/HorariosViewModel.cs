@@ -25,7 +25,7 @@ namespace FoodDispenserApp.ViewModels
         {
             _apiService = apiService;
             _mqttService = mqttService;
-            Horarios = horarios;
+            Horarios = horarios ?? throw new ArgumentNullException(nameof(horarios));
 
             LoadHorariosCommand = new Command(async () => await LoadHorariosAsync());
             UpdateHorariosCommand = new Command(async () => await UpdateHorariosAsync());
@@ -34,8 +34,8 @@ namespace FoodDispenserApp.ViewModels
 
         private async Task LoadHorariosAsync()
         {
-            // No necesitamos reconectar aquí; MainViewModel ya maneja la conexión MQTT
-            Console.WriteLine("Horarios ya están siendo gestionados por MainViewModel.");
+            // Los horarios ya están gestionados por MainViewModel; no necesitamos hacer nada aquí
+            Console.WriteLine("Horarios ya están sincronizados desde MainViewModel.");
         }
 
         private async Task UpdateHorariosAsync()

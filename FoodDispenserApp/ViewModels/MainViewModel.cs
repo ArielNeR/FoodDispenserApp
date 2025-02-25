@@ -80,7 +80,7 @@ namespace FoodDispenserApp.ViewModels
             set { _foodLevelChart = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<Horario> Horarios { get; } // Colección compartida
+        public ObservableCollection<Horario> Horarios { get; } // Colección compartida, sin valor por defecto inicial
 
         public ICommand RefreshCommand { get; }
         public ICommand ActivateMotorCommand { get; }
@@ -137,7 +137,7 @@ namespace FoodDispenserApp.ViewModels
             };
 
             Console.WriteLine("MainViewModel inicializado. Iniciando refresh...");
-            InitializeRefresh();
+            Task.Run(InitializeAsync); // Ejecutar la inicialización asíncronamente
             Device.StartTimer(TimeSpan.FromMinutes(1), () =>
             {
                 Console.WriteLine("Timer disparado para refrescar datos.");
@@ -146,7 +146,7 @@ namespace FoodDispenserApp.ViewModels
             });
         }
 
-        private async void InitializeRefresh()
+        private async Task InitializeAsync()
         {
             await Task.Delay(1000);
             Console.WriteLine("Ejecutando primer refresh...");
