@@ -23,7 +23,7 @@ namespace FoodDispenserApp
 
             // Solo servicios necesarios para MQTT
             builder.Services.AddSingleton<IMqttService, MqttService>();
-            builder.Services.AddSingleton<ObservableCollection<Horario>>(); // Colección compartida
+            builder.Services.AddSingleton<ObservableCollection<Horario>>();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<HorariosViewModel>();
             builder.Services.AddSingleton<MainPage>();

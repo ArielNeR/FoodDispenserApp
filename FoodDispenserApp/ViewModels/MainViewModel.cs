@@ -43,9 +43,18 @@ namespace FoodDispenserApp.ViewModels
             set { _connectionStatus = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<ChartEntry> TemperatureHistory { get; } = new();
-        public ObservableCollection<ChartEntry> HumidityHistory { get; } = new();
-        public ObservableCollection<ChartEntry> FoodLevelHistory { get; } = new();
+        public ObservableCollection<ChartEntry> TemperatureHistory { get; } = new ObservableCollection<ChartEntry>
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#FF0000") }
+        };
+        public ObservableCollection<ChartEntry> HumidityHistory { get; } = new ObservableCollection<ChartEntry>
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#0000FF") }
+        };
+        public ObservableCollection<ChartEntry> FoodLevelHistory { get; } = new ObservableCollection<ChartEntry>
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#00FF00") }
+        };
 
         private Chart _temperatureChart;
         public Chart TemperatureChart
@@ -85,12 +94,10 @@ namespace FoodDispenserApp.ViewModels
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
             SaveHorariosCommand = new Command(async () => await SaveHorariosAsync());
 
-            // Inicializar gráficos vacíos
             TemperatureChart = new LineChart { Entries = TemperatureHistory };
             HumidityChart = new LineChart { Entries = HumidityHistory };
             FoodLevelChart = new LineChart { Entries = FoodLevelHistory };
 
-            // Configurar eventos MQTT
             _mqttService.OnSensorDataReceived += (sender, sensorData) =>
             {
                 MainThread.BeginInvokeOnMainThread(() =>
@@ -117,7 +124,6 @@ namespace FoodDispenserApp.ViewModels
                 });
             };
 
-            // Iniciar conexión MQTT de forma asíncrona
             Task.Run(InitializeAsync);
         }
 

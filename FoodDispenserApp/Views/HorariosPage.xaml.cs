@@ -14,7 +14,6 @@ public partial class HorariosPage : ContentPage
 
     private async void OnEditHorariosClicked(object sender, EventArgs e)
     {
-        // Pre-cargar la página en segundo plano para reducir retrasos
         var editPage = new HorariosEditPage(_viewModel);
         await Navigation.PushAsync(editPage);
     }
