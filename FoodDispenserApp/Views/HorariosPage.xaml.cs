@@ -4,10 +4,12 @@ namespace FoodDispenserApp.Views;
 
 public partial class HorariosPage : ContentPage
 {
+    private readonly HorariosViewModel _viewModel;
+
     public HorariosPage(HorariosViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        BindingContext = _viewModel = viewModel;
     }
 
     private async void OnEditHorariosClicked(object sender, EventArgs e)

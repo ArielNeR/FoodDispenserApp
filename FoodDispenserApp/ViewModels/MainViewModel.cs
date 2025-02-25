@@ -80,12 +80,7 @@ namespace FoodDispenserApp.ViewModels
             set { _foodLevelChart = value; OnPropertyChanged(); }
         }
 
-        private ObservableCollection<Horario> _horarios = new();
-        public ObservableCollection<Horario> Horarios
-        {
-            get => _horarios;
-            set { _horarios = value; OnPropertyChanged(); }
-        }
+        public ObservableCollection<Horario> Horarios { get; } // Colección compartida
 
         public ICommand RefreshCommand { get; }
         public ICommand ActivateMotorCommand { get; }
@@ -93,12 +88,13 @@ namespace FoodDispenserApp.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService, BackgroundDataService backgroundService)
+        public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService, BackgroundDataService backgroundService, ObservableCollection<Horario> horarios)
         {
             Console.WriteLine("Inicializando MainViewModel...");
             _mqttService = mqttService ?? throw new ArgumentNullException(nameof(mqttService));
             _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
             _backgroundService = backgroundService ?? throw new ArgumentNullException(nameof(backgroundService));
+            Horarios = horarios ?? throw new ArgumentNullException(nameof(horarios));
 
             RefreshCommand = new Command(async () => await RefreshDataAsync());
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
@@ -263,7 +259,6 @@ namespace FoodDispenserApp.ViewModels
             if (HumidityHistory.Count > 10) HumidityHistory.RemoveAt(0);
             if (FoodLevelHistory.Count > 10) FoodLevelHistory.RemoveAt(0);
 
-            // Actualizar los gráficos para reflejar los nuevos datos
             TemperatureChart = new LineChart { Entries = TemperatureHistory };
             HumidityChart = new LineChart { Entries = HumidityHistory };
             FoodLevelChart = new LineChart { Entries = FoodLevelHistory };

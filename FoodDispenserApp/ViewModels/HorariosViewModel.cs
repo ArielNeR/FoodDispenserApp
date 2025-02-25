@@ -13,7 +13,7 @@ namespace FoodDispenserApp.ViewModels
         private readonly IApiService _apiService;
         private readonly IMqttService _mqttService;
 
-        public ObservableCollection<Horario> Horarios { get; set; } = new();
+        public ObservableCollection<Horario> Horarios { get; } // Colección compartida
 
         public ICommand LoadHorariosCommand { get; }
         public ICommand UpdateHorariosCommand { get; }
@@ -21,52 +21,21 @@ namespace FoodDispenserApp.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public HorariosViewModel(IApiService apiService, IMqttService mqttService)
+        public HorariosViewModel(IApiService apiService, IMqttService mqttService, ObservableCollection<Horario> horarios)
         {
             _apiService = apiService;
             _mqttService = mqttService;
+            Horarios = horarios;
 
             LoadHorariosCommand = new Command(async () => await LoadHorariosAsync());
             UpdateHorariosCommand = new Command(async () => await UpdateHorariosAsync());
             EditHorariosCommand = new Command(OnEditHorarios);
-
-            _mqttService.OnHorariosReceived += (sender, horariosResponse) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Horarios.Clear();
-                    foreach (var h in horariosResponse.Horarios)
-                    {
-                        Horarios.Add(h);
-                    }
-                });
-            };
-
-            Task.Run(async () => await LoadHorariosAsync());
         }
 
         private async Task LoadHorariosAsync()
         {
-            try
-            {
-                var horariosList = await _apiService.GetHorariosAsync();
-                Horarios.Clear();
-                if (horariosList != null && horariosList.Any())
-                {
-                    foreach (var h in horariosList)
-                    {
-                        Horarios.Add(h);
-                    }
-                }
-                else
-                {
-                    await Application.Current.MainPage.DisplayAlert("Info", "No se encontraron horarios.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.DisplayAlert("Error", $"No se pudieron cargar los horarios: {ex.Message}", "OK");
-            }
+            // No necesitamos reconectar aquí; MainViewModel ya maneja la conexión MQTT
+            Console.WriteLine("Horarios ya están siendo gestionados por MainViewModel.");
         }
 
         private async Task UpdateHorariosAsync()
@@ -85,7 +54,7 @@ namespace FoodDispenserApp.ViewModels
 
         private void OnEditHorarios()
         {
-            // Lógica para edición si es necesario (puede navegar a HorariosEditPage desde la UI)
+            // Lógica para edición si es necesario
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)

@@ -2,6 +2,8 @@
 using FoodDispenserApp.ViewModels;
 using Microcharts.Maui;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
+using FoodDispenserApp.Models;
 
 namespace FoodDispenserApp
 {
@@ -26,9 +28,9 @@ namespace FoodDispenserApp
 
             builder.Services.AddSingleton<IMqttService, MqttService>();
             builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
-            // Registrar BackgroundDataService como singleton y como hosted service
             builder.Services.AddSingleton<BackgroundDataService>();
             builder.Services.AddHostedService(provider => provider.GetRequiredService<BackgroundDataService>());
+            builder.Services.AddSingleton<ObservableCollection<Horario>>(); // Colección compartida
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<HorariosViewModel>();
             builder.Services.AddSingleton<MainPage>();
