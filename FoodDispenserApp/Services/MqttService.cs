@@ -63,8 +63,13 @@ namespace FoodDispenserApp.Services
                     }
                     else if (topic == "dispensador/horarios")
                     {
-                        var horariosResponse = JsonSerializer.Deserialize<HorariosResponse>(payload);
-                        if (horariosResponse?.Horarios != null && horariosResponse.Horarios.Any())
+                        // Deserializar directamente como una lista de Horario con claves en minúsculas
+                        var horariosList = JsonSerializer.Deserialize<List<Horario>>(payload, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true // Permitir minúsculas en las claves
+                        });
+                        var horariosResponse = new HorariosResponse { Horarios = horariosList ?? new List<Horario>() };
+                        if (horariosResponse.Horarios.Any())
                         {
                             OnHorariosReceived?.Invoke(this, horariosResponse);
                         }
@@ -150,12 +155,11 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
-                // Serializar directamente como una lista con claves en minúsculas
                 var options = new JsonSerializerOptions
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Convierte a minúsculas iniciales (hora, minuto, duracion)
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
-                var payload = JsonSerializer.Serialize(horarios, options); // Serializa la lista sin envoltorio
+                var payload = JsonSerializer.Serialize(horarios, options);
 
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("dispensador/horarios")
