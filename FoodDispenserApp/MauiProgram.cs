@@ -21,15 +21,8 @@ namespace FoodDispenserApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            builder.Services.AddHttpClient<IApiService, ApiService>(client =>
-            {
-                client.BaseAddress = new Uri("http://192.168.100.82:8000/");
-            });
-
+            // Solo servicios necesarios para MQTT
             builder.Services.AddSingleton<IMqttService, MqttService>();
-            builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
-            builder.Services.AddSingleton<BackgroundDataService>();
-            builder.Services.AddHostedService(provider => provider.GetRequiredService<BackgroundDataService>());
             builder.Services.AddSingleton<ObservableCollection<Horario>>(); // Colección compartida
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<HorariosViewModel>();

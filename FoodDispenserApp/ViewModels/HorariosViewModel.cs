@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Windows.Input;
 using FoodDispenserApp.Models;
 using FoodDispenserApp.Services;
@@ -10,41 +9,32 @@ namespace FoodDispenserApp.ViewModels
 {
     public class HorariosViewModel : INotifyPropertyChanged
     {
-        private readonly IApiService _apiService;
         private readonly IMqttService _mqttService;
 
-        public ObservableCollection<Horario> Horarios { get; } // Colección compartida
+        public ObservableCollection<Horario> Horarios { get; }
 
-        public ICommand LoadHorariosCommand { get; }
         public ICommand UpdateHorariosCommand { get; }
         public ICommand EditHorariosCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public HorariosViewModel(IApiService apiService, IMqttService mqttService, ObservableCollection<Horario> horarios)
+        public HorariosViewModel(IMqttService mqttService, ObservableCollection<Horario> horarios)
         {
-            _apiService = apiService;
-            _mqttService = mqttService;
+            _mqttService = mqttService ?? throw new ArgumentNullException(nameof(mqttService));
             Horarios = horarios ?? throw new ArgumentNullException(nameof(horarios));
 
-            LoadHorariosCommand = new Command(async () => await LoadHorariosAsync());
             UpdateHorariosCommand = new Command(async () => await UpdateHorariosAsync());
             EditHorariosCommand = new Command(OnEditHorarios);
-        }
-
-        private async Task LoadHorariosAsync()
-        {
-            // Los horarios ya están gestionados por MainViewModel; no necesitamos hacer nada aquí
-            Console.WriteLine("Horarios ya están sincronizados desde MainViewModel.");
         }
 
         private async Task UpdateHorariosAsync()
         {
             try
             {
-                Console.WriteLine($"Publicando horarios: {JsonSerializer.Serialize(Horarios.ToList())}");
-                await _mqttService.PublishHorariosAsync(Horarios.ToList());
-                await Application.Current.MainPage.DisplayAlert("Éxito", "Horarios guardados correctamente.", "OK");
+                if (_mqttService.IsConnected)
+                {
+                    await _mqttService.PublishHorariosAsync(Horarios.ToList());
+                }
             }
             catch (Exception ex)
             {
