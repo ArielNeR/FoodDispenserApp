@@ -46,9 +46,19 @@ namespace FoodDispenserApp.ViewModels
             set { _connectionStatus = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<ChartEntry> TemperatureHistory { get; set; } = new();
-        public ObservableCollection<ChartEntry> HumidityHistory { get; set; } = new();
-        public ObservableCollection<ChartEntry> FoodLevelHistory { get; set; } = new();
+        // Inicializar con un elemento por defecto
+        public ObservableCollection<ChartEntry> TemperatureHistory { get; set; } = new ObservableCollection<ChartEntry>
+    {
+        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#FF0000") }
+    };
+        public ObservableCollection<ChartEntry> HumidityHistory { get; set; } = new ObservableCollection<ChartEntry>
+    {
+        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#0000FF") }
+    };
+        public ObservableCollection<ChartEntry> FoodLevelHistory { get; set; } = new ObservableCollection<ChartEntry>
+    {
+        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#00FF00") }
+    };
 
         private Chart _temperatureChart;
         public Chart TemperatureChart
@@ -86,9 +96,10 @@ namespace FoodDispenserApp.ViewModels
 
         public MainViewModel(IMqttService mqttService, IConnectivityService connectivityService, BackgroundDataService backgroundService)
         {
-            _mqttService = mqttService;
-            _connectivityService = connectivityService;
-            _backgroundService = backgroundService;
+            Console.WriteLine("Inicializando MainViewModel...");
+            _mqttService = mqttService ?? throw new ArgumentNullException(nameof(mqttService));
+            _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
+            _backgroundService = backgroundService ?? throw new ArgumentNullException(nameof(backgroundService));
 
             RefreshCommand = new Command(async () => await RefreshDataAsync());
             ActivateMotorCommand = new Command(async () => await ActivateMotorAsync());
@@ -100,6 +111,7 @@ namespace FoodDispenserApp.ViewModels
 
             _mqttService.OnSensorDataReceived += (sender, sensorData) =>
             {
+                Console.WriteLine("Datos de sensores recibidos.");
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     Temperature = sensorData.Temperature;
@@ -111,22 +123,29 @@ namespace FoodDispenserApp.ViewModels
 
             _mqttService.OnHorariosReceived += (sender, horariosResponse) =>
             {
+                Console.WriteLine("Horarios recibidos.");
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
+                    Horarios.Clear();
                     if (horariosResponse?.Horarios != null && horariosResponse.Horarios.Any())
                     {
-                        Horarios.Clear();
                         foreach (var horario in horariosResponse.Horarios)
                         {
                             Horarios.Add(horario);
                         }
                     }
+                    else
+                    {
+                        ConnectionStatus = "No se recibieron horarios.";
+                    }
                 });
             };
 
+            Console.WriteLine("MainViewModel inicializado. Iniciando refresh...");
             InitializeRefresh();
             Device.StartTimer(TimeSpan.FromMinutes(1), () =>
             {
+                Console.WriteLine("Timer disparado para refrescar datos.");
                 _ = RefreshDataAsync();
                 return true;
             });
@@ -135,6 +154,7 @@ namespace FoodDispenserApp.ViewModels
         private async void InitializeRefresh()
         {
             await Task.Delay(1000);
+            Console.WriteLine("Ejecutando primer refresh...");
             await RefreshDataAsync();
         }
 
@@ -145,6 +165,7 @@ namespace FoodDispenserApp.ViewModels
 
             try
             {
+                Console.WriteLine("Refrescando datos...");
                 if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
                 {
                     ConnectionStatus = "Sin conexión a Internet";
@@ -152,12 +173,12 @@ namespace FoodDispenserApp.ViewModels
                     return;
                 }
 
-                // Usamos el método asíncrono para verificar la conectividad local
                 bool isLocal = await _connectivityService.CheckLocalConnectivityAsync();
                 ConnectionStatus = isLocal ? "Conectado en modo local" : "Conectado en modo remoto";
 
                 if (!_mqttService.IsConnected)
                 {
+                    Console.WriteLine("Conectando al broker MQTT...");
                     await _mqttService.ConnectAsync();
                     if (_mqttService.IsConnected)
                     {
@@ -169,6 +190,7 @@ namespace FoodDispenserApp.ViewModels
             catch (Exception ex)
             {
                 ConnectionStatus = $"Error en la conexión MQTT: {ex.Message}";
+                Console.WriteLine($"Excepción en RefreshDataAsync: {ex}");
                 await Application.Current.MainPage.DisplayAlert("Error", ex.Message, "OK");
             }
             finally

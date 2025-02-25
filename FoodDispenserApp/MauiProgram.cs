@@ -26,7 +26,9 @@ namespace FoodDispenserApp
 
             builder.Services.AddSingleton<IMqttService, MqttService>();
             builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
-            builder.Services.AddHostedService<BackgroundDataService>();
+            // Registrar BackgroundDataService como singleton y como hosted service
+            builder.Services.AddSingleton<BackgroundDataService>();
+            builder.Services.AddHostedService(provider => provider.GetRequiredService<BackgroundDataService>());
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<HorariosViewModel>();
             builder.Services.AddSingleton<MainPage>();

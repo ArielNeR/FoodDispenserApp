@@ -28,7 +28,7 @@
 
             <!-- Botones de acción -->
             <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
-            <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" />
+            <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" IsVisible="False" />
 
             <!-- Nuevo botón para Horarios -->
             <Button Text="Ver/Editar Horarios" Clicked="OnHorariosClicked" />

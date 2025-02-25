@@ -50,9 +50,16 @@ namespace FoodDispenserApp.ViewModels
             {
                 var horariosList = await _apiService.GetHorariosAsync();
                 Horarios.Clear();
-                foreach (var h in horariosList)
+                if (horariosList != null && horariosList.Any())
                 {
-                    Horarios.Add(h);
+                    foreach (var h in horariosList)
+                    {
+                        Horarios.Add(h);
+                    }
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Info", "No se encontraron horarios.", "OK");
                 }
             }
             catch (Exception ex)
