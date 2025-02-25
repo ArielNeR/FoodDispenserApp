@@ -2,28 +2,48 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodDispenserApp.Views.HorariosPage"
-             Title="Horarios de Dispensación">
-    <ContentPage.Content>
-        <StackLayout Padding="20" Spacing="20">
-            <Label Text="Horarios de Dispensación" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="Center" />
+             Title="Horarios">
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <!-- Título -->
+        <Label Grid.Row="0" 
+               Text="Horarios de Dispensación" 
+               FontSize="24" 
+               FontFamily="OpenSansSemibold" 
+               TextColor="{StaticResource NetflixWhite}"
+               HorizontalOptions="Start" />
 
-            <!-- Lista de horarios -->
-            <CollectionView ItemsSource="{Binding Horarios}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <StackLayout Orientation="Horizontal" Padding="10">
-                            <Label Text="{Binding Hora}" FontSize="Large" />
-                            <Label Text=":" FontSize="Large" />
-                            <Label Text="{Binding Minuto}" FontSize="Large" />
-                            <Label Text="   Duración: " FontSize="Large" />
-                            <Label Text="{Binding Duracion}" FontSize="Large" />
-                        </StackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <!-- Botón para editar horarios -->
-            <Button Text="Editar Horarios" Clicked="OnEditHorariosClicked" />
-        </StackLayout>
-    </ContentPage.Content>
+        <!-- Lista de horarios -->
+        <ScrollView Grid.Row="1">
+            <StackLayout Spacing="15">
+                <CollectionView ItemsSource="{Binding Horarios}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="{StaticResource NetflixDarkGray}" 
+                                   CornerRadius="10" 
+                                   Padding="15">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <Label Grid.Column="0" 
+                                           Text="{Binding ., Converter={StaticResource HorarioToStringConverter}}" 
+                                           FontSize="18" 
+                                           TextColor="{StaticResource NetflixWhite}" />
+                                    <Button Grid.Column="1" 
+                                            Text="Editar" 
+                                            FontSize="12" 
+                                            Padding="10,5" 
+                                            BackgroundColor="{StaticResource NetflixRed}"
+                                            TextColor="{StaticResource NetflixWhite}"
+                                            Clicked="OnEditHorariosClicked" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Button Text="Agregar Horario" 
+                        Clicked="OnEditHorariosClicked" 
+                        Margin="0,10,0,0" 
+                        BackgroundColor="{StaticResource NetflixRed}"
+                        TextColor="{StaticResource NetflixWhite}" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

@@ -3,45 +3,64 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:chart="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="FoodDispenserApp.MainPage"
-             Title="Food Dispenser Monitor">
-    <ScrollView>
-        <StackLayout Padding="20" Spacing="20">
-            <!-- Indicador de conexión -->
-            <Label Text="Estado de Conexión:" FontSize="Medium" />
-            <Label Text="{Binding ConnectionStatus}" FontAttributes="Bold" TextColor="Green"/>
+             xmlns:converters="clr-namespace:FoodDispenserApp.Converters"
+             Title="Food Dispenser">
 
-            <!-- Datos de sensores -->
-            <StackLayout Orientation="Horizontal" Spacing="10">
-                <StackLayout>
-                    <Label Text="Temperatura:" />
-                    <Label Text="{Binding Temperature}" FontSize="Large" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Humedad:" />
-                    <Label Text="{Binding Humidity}" FontSize="Large" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Nivel de Comida:" />
-                    <Label Text="{Binding FoodLevel}" FontSize="Large" />
-                </StackLayout>
-            </StackLayout>
+    <ContentPage.Resources>
+        <converters:StatusColorConverter x:Key="StatusColorConverter" />
+    </ContentPage.Resources>
 
-            <!-- Botones de acción -->
-            <Button Text="Refrescar Datos" Command="{Binding RefreshCommand}" />
-            <Button Text="Activar Motor" Command="{Binding ActivateMotorCommand}" IsVisible="False" />
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20">
+        <!-- Header -->
+        <Label Grid.Row="0" 
+               Text="Food Dispenser Monitor" 
+               FontSize="24" 
+               FontFamily="OpenSansSemibold" 
+               HorizontalOptions="Start" 
+               VerticalOptions="Center" />
 
-            <!-- Nuevo botón para Horarios -->
-            <Button Text="Ver/Editar Horarios" Clicked="OnHorariosClicked" />
-
-            <!-- Gráficos estadísticos -->
-            <Label Text="Gráfico de Temperatura" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding TemperatureChart}" HeightRequest="200" />
-
-            <Label Text="Gráfico de Humedad" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding HumidityChart}" HeightRequest="200" />
-
-            <Label Text="Gráfico de Nivel de Comida" FontSize="Medium" />
-            <chart:ChartView Chart="{Binding FoodLevelChart}" HeightRequest="200" />
+        <!-- Estado de conexión -->
+        <StackLayout Grid.Row="1" Orientation="Horizontal" Spacing="10">
+            <Label Text="Estado:" FontSize="14" VerticalOptions="Center" />
+            <Label Text="{Binding ConnectionStatus}" 
+                   FontSize="14" 
+                   TextColor="{Binding ConnectionStatus, Converter={StaticResource StatusColorConverter}}" 
+                   VerticalOptions="Center" />
         </StackLayout>
-    </ScrollView>
+
+        <!-- Contenido principal -->
+        <ScrollView Grid.Row="2">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*">
+                <!-- Datos de sensores -->
+                <StackLayout Grid.Row="0" Grid.Column="0" Padding="10">
+                    <Label Text="Temperatura" FontSize="18" />
+                    <Label Text="{Binding Temperature, StringFormat='{0:F1}°C'}" FontSize="24" FontFamily="OpenSansSemibold" />
+                </StackLayout>
+                <StackLayout Grid.Row="0" Grid.Column="1" Padding="10">
+                    <Label Text="Humedad" FontSize="18" />
+                    <Label Text="{Binding Humidity, StringFormat='{0:F1}%'}" FontSize="24" FontFamily="OpenSansSemibold" />
+                </StackLayout>
+                <StackLayout Grid.Row="0" Grid.Column="2" Padding="10">
+                    <Label Text="Nivel de Comida" FontSize="18" />
+                    <Label Text="{Binding FoodLevel, StringFormat='{0:F1} cm'}" FontSize="24" FontFamily="OpenSansSemibold" />
+                </StackLayout>
+
+                <!-- Gráficos -->
+                <StackLayout Grid.Row="1" Grid.ColumnSpan="3" Spacing="20" Padding="0,20,0,0">
+                    <Label Text="Gráfico de Temperatura" FontSize="Medium" />
+                    <chart:ChartView Chart="{Binding TemperatureChart}" HeightRequest="150" />
+                    <Label Text="Gráfico de Humedad" FontSize="Medium" />
+                    <chart:ChartView Chart="{Binding HumidityChart}" HeightRequest="150" />
+                    <Label Text="Gráfico de Nivel de Comida" FontSize="Medium" />
+                    <chart:ChartView Chart="{Binding FoodLevelChart}" HeightRequest="150" />
+                </StackLayout>
+            </Grid>
+        </ScrollView>
+
+        <!-- Botones -->
+        <StackLayout Grid.Row="3" Orientation="Horizontal" Spacing="10" HorizontalOptions="End">
+            <Button Text="Refrescar" Command="{Binding RefreshCommand}" />
+            <Button Text="Horarios" Clicked="OnHorariosClicked" />
+        </StackLayout>
+    </Grid>
 </ContentPage>

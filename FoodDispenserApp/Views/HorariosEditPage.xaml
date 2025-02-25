@@ -3,33 +3,57 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodDispenserApp.Views.HorariosEditPage"
              Title="Editar Horarios">
-    <ContentPage.Content>
-        <StackLayout Padding="20" Spacing="20">
-            <Label Text="Editar Horarios" FontSize="Medium" HorizontalOptions="Center" />
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <!-- Título -->
+        <Label Grid.Row="0" 
+               Text="Editar Horarios" 
+               FontSize="24" 
+               FontFamily="OpenSansSemibold" 
+               HorizontalOptions="Start" />
 
-            <!-- Listado editable de horarios -->
-            <CollectionView ItemsSource="{Binding Horarios}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto" Padding="5">
-                            <!-- Entry para Hora -->
-                            <Entry Text="{Binding Hora, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Hora" />
-                            <!-- Entry para Minuto -->
-                            <Entry Text="{Binding Minuto, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Minuto" Grid.Column="1"/>
-                            <!-- Entry para Duración -->
-                            <Entry Text="{Binding Duracion, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Duración" Grid.Column="2"/>
-                            <!-- Botón para eliminar -->
-                            <Button Text="Eliminar" Grid.Column="3" Clicked="OnDeleteHorarioClicked" CommandParameter="{Binding .}" />
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <!-- Botón para agregar un nuevo horario -->
-            <Button Text="Agregar Horario" Clicked="OnAddHorarioClicked" />
-
-            <!-- Botón para guardar cambios -->
-            <Button Text="Guardar Horarios" Command="{Binding UpdateHorariosCommand}" />
-        </StackLayout>
-    </ContentPage.Content>
+        <!-- Lista editable -->
+        <ScrollView Grid.Row="1">
+            <StackLayout Spacing="15">
+                <CollectionView ItemsSource="{Binding Horarios}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="{StaticResource NetflixDarkGray}" 
+                                   CornerRadius="10" 
+                                   Padding="15">
+                                <Grid ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto" ColumnSpacing="10">
+                                    <Entry Grid.Column="0" 
+                                           Text="{Binding Hora, Mode=TwoWay}" 
+                                           Keyboard="Numeric" 
+                                           Placeholder="Hora" 
+                                           TextColor="{StaticResource NetflixWhite}" 
+                                           BackgroundColor="Transparent" />
+                                    <Entry Grid.Column="1" 
+                                           Text="{Binding Minuto, Mode=TwoWay}" 
+                                           Keyboard="Numeric" 
+                                           Placeholder="Min" 
+                                           TextColor="{StaticResource NetflixWhite}" 
+                                           BackgroundColor="Transparent" />
+                                    <Entry Grid.Column="2" 
+                                           Text="{Binding Duracion, Mode=TwoWay}" 
+                                           Keyboard="Numeric" 
+                                           Placeholder="Duración" 
+                                           TextColor="{StaticResource NetflixWhite}" 
+                                           BackgroundColor="Transparent" />
+                                    <Button Grid.Column="3" 
+                                            Text="X" 
+                                            FontSize="12" 
+                                            Padding="5" 
+                                            BackgroundColor="{StaticResource NetflixRed}" 
+                                            Clicked="OnDeleteHorarioClicked" 
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Button Text="Agregar Horario" Clicked="OnAddHorarioClicked" Margin="0,10,0,0" />
+                <Button Text="Guardar" Command="{Binding UpdateHorariosCommand}" Margin="0,10,0,0" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

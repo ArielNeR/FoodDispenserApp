@@ -207,21 +207,21 @@ namespace FoodDispenserApp.ViewModels
             {
                 Label = data.Timestamp.ToString("HH:mm"),
                 ValueLabel = $"{data.Temperature:F1}",
-                Color = SKColor.Parse("#FF0000")
+                Color = SKColor.Parse("#E50914") // NetflixRed para temperatura
             });
 
             HumidityHistory.Add(new ChartEntry((float)data.Humidity)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
                 ValueLabel = $"{data.Humidity:F1}",
-                Color = SKColor.Parse("#0000FF")
+                Color = SKColor.Parse("#808080") // NetflixGray para humedad
             });
 
             FoodLevelHistory.Add(new ChartEntry((float)data.Ultrasonido)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
                 ValueLabel = $"{data.Ultrasonido:F1}",
-                Color = SKColor.Parse("#00FF00")
+                Color = SKColor.Parse("#E5E5E5") // NetflixWhite para nivel de comida
             });
 
             const int maxEntries = 10;
@@ -229,9 +229,33 @@ namespace FoodDispenserApp.ViewModels
             while (HumidityHistory.Count > maxEntries) HumidityHistory.RemoveAt(0);
             while (FoodLevelHistory.Count > maxEntries) FoodLevelHistory.RemoveAt(0);
 
-            TemperatureChart = new LineChart { Entries = TemperatureHistory };
-            HumidityChart = new LineChart { Entries = HumidityHistory };
-            FoodLevelChart = new LineChart { Entries = FoodLevelHistory };
+            TemperatureChart = new LineChart
+            {
+                Entries = TemperatureHistory,
+                BackgroundColor = SKColor.Parse("#141414"), // NetflixBlack
+                LabelTextSize = 24f, // Tamaño de fuente más grande para legibilidad
+                LabelColor = SKColor.Parse("#E5E5E5"), // NetflixWhite para etiquetas
+                ValueLabelOrientation = Orientation.Horizontal,
+                LineSize = 4f // Líneas más gruesas para visibilidad
+            };
+            HumidityChart = new LineChart
+            {
+                Entries = HumidityHistory,
+                BackgroundColor = SKColor.Parse("#141414"),
+                LabelTextSize = 24f,
+                LabelColor = SKColor.Parse("#E5E5E5"),
+                ValueLabelOrientation = Orientation.Horizontal,
+                LineSize = 4f
+            };
+            FoodLevelChart = new LineChart
+            {
+                Entries = FoodLevelHistory,
+                BackgroundColor = SKColor.Parse("#141414"),
+                LabelTextSize = 24f,
+                LabelColor = SKColor.Parse("#E5E5E5"),
+                ValueLabelOrientation = Orientation.Horizontal,
+                LineSize = 4f
+            };
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)
