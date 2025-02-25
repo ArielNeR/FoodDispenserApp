@@ -206,6 +206,7 @@ namespace FoodDispenserApp.ViewModels
             TemperatureHistory.Add(new ChartEntry((float)data.Temperature)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
+                ValueLabelColor = SKColor.Parse("#ffffff"),
                 ValueLabel = $"{data.Temperature:F1}",
                 Color = SKColor.Parse("#E50914") // NetflixRed para temperatura
             });
@@ -213,6 +214,7 @@ namespace FoodDispenserApp.ViewModels
             HumidityHistory.Add(new ChartEntry((float)data.Humidity)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
+                ValueLabelColor = SKColor.Parse("#ffffff"),
                 ValueLabel = $"{data.Humidity:F1}",
                 Color = SKColor.Parse("#808080") // NetflixGray para humedad
             });
@@ -220,6 +222,7 @@ namespace FoodDispenserApp.ViewModels
             FoodLevelHistory.Add(new ChartEntry((float)data.Ultrasonido)
             {
                 Label = data.Timestamp.ToString("HH:mm"),
+                ValueLabelColor = SKColor.Parse("#ffffff"),
                 ValueLabel = $"{data.Ultrasonido:F1}",
                 Color = SKColor.Parse("#E5E5E5") // NetflixWhite para nivel de comida
             });
