@@ -15,28 +15,28 @@ namespace FoodDispenserApp.Services
         public event EventHandler<SensorData>? OnSensorDataReceived;
         public event EventHandler<HorariosResponse>? OnHorariosReceived;
 
-
         public MqttService()
         {
-            // Se utiliza MqttFactory (la forma actual recomendada) para crear el cliente.
             var factory = new MqttClientFactory();
             _mqttClient = factory.CreateMqttClient();
 
             _mqttClient.ConnectedAsync += async e =>
             {
+                Console.WriteLine("Cliente MQTT conectado. Suscribiendo a tópicos...");
                 await SubscribeToTopics();
             };
 
             _mqttClient.DisconnectedAsync += async e =>
             {
+                Console.WriteLine("Cliente MQTT desconectado. Intentando reconectar en 5 segundos...");
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 try
                 {
                     await _mqttClient.ConnectAsync(_mqttOptions);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Error al reconectar al broker MQTT. mqtt serviice");
+                    Console.WriteLine($"Error al reconectar al broker MQTT: {ex.Message}");
                 }
             };
 
@@ -44,6 +44,7 @@ namespace FoodDispenserApp.Services
             {
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                Console.WriteLine($"Mensaje recibido en tópico: {topic}, Payload: {payload}");
 
                 try
                 {
@@ -78,9 +79,6 @@ namespace FoodDispenserApp.Services
                 }
             };
 
-
-
-
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithClientId("FoodDispenserAppClient")
                 .WithTcpServer("04d1d89fd686436aba9da7fe351608aa.s1.eu.hivemq.cloud", 8883)
@@ -91,7 +89,7 @@ namespace FoodDispenserApp.Services
                     SslProtocol = SslProtocols.Tls12,
                     CertificateValidationHandler = context => true,
                 })
-                .WithCleanSession()
+                .WithCleanSession(false) // Cambiar a false para mantener el estado de la suscripción
                 .Build();
         }
 
@@ -99,6 +97,7 @@ namespace FoodDispenserApp.Services
         {
             if (!_mqttClient.IsConnected)
             {
+                Console.WriteLine("Conectando al broker MQTT...");
                 await _mqttClient.ConnectAsync(_mqttOptions);
             }
         }
@@ -107,6 +106,7 @@ namespace FoodDispenserApp.Services
         {
             if (_mqttClient.IsConnected)
             {
+                Console.WriteLine("Desconectando del broker MQTT...");
                 await _mqttClient.DisconnectAsync();
             }
         }
@@ -121,6 +121,11 @@ namespace FoodDispenserApp.Services
                     .Build();
 
                 await _mqttClient.SubscribeAsync(subscribeOptions);
+                Console.WriteLine("Suscripción a tópicos realizada: dispensador/sensores, dispensador/horarios");
+            }
+            else
+            {
+                Console.WriteLine("No se pudo suscribir: el cliente MQTT no está conectado.");
             }
         }
 
@@ -132,14 +137,13 @@ namespace FoodDispenserApp.Services
                     .WithTopic("commands/activate_motor")
                     .WithPayload("")
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-                    .WithRetainFlag(false)
+                    .WithRetainFlag(false) // No retenido, ya que es un comando
                     .Build();
 
                 await _mqttClient.PublishAsync(message);
+                Console.WriteLine("Mensaje de activación del motor publicado.");
             }
         }
-
-
 
         public async Task PublishHorariosAsync(List<Horario> horarios)
         {
@@ -150,12 +154,16 @@ namespace FoodDispenserApp.Services
                     .WithTopic("dispensador/horarios")
                     .WithPayload(payload)
                     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-                    .WithRetainFlag(true)  // Para que el mensaje se mantenga en el broker
+                    .WithRetainFlag(true) // Asegurar que el mensaje sea retenido
                     .Build();
 
                 await _mqttClient.PublishAsync(message);
+                Console.WriteLine($"Horarios publicados en dispensador/horarios: {payload}");
+            }
+            else
+            {
+                Console.WriteLine("No se pudo publicar horarios: el cliente MQTT no está conectado.");
             }
         }
-
     }
 }

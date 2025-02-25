@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Windows.Input;
 using FoodDispenserApp.Models;
 using FoodDispenserApp.Services;
@@ -72,8 +73,9 @@ namespace FoodDispenserApp.ViewModels
         {
             try
             {
+                Console.WriteLine($"Publicando horarios: {JsonSerializer.Serialize(Horarios.ToList())}");
                 await _mqttService.PublishHorariosAsync(Horarios.ToList());
-                await LoadHorariosAsync();
+                await Application.Current.MainPage.DisplayAlert("Éxito", "Horarios guardados correctamente.", "OK");
             }
             catch (Exception ex)
             {

@@ -46,19 +46,18 @@ namespace FoodDispenserApp.ViewModels
             set { _connectionStatus = value; OnPropertyChanged(); }
         }
 
-        // Inicializar con un elemento por defecto
         public ObservableCollection<ChartEntry> TemperatureHistory { get; set; } = new ObservableCollection<ChartEntry>
-    {
-        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#FF0000") }
-    };
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#FF0000") }
+        };
         public ObservableCollection<ChartEntry> HumidityHistory { get; set; } = new ObservableCollection<ChartEntry>
-    {
-        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#0000FF") }
-    };
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#0000FF") }
+        };
         public ObservableCollection<ChartEntry> FoodLevelHistory { get; set; } = new ObservableCollection<ChartEntry>
-    {
-        new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#00FF00") }
-    };
+        {
+            new ChartEntry(0) { Label = "Inicio", ValueLabel = "0", Color = SKColor.Parse("#00FF00") }
+        };
 
         private Chart _temperatureChart;
         public Chart TemperatureChart
@@ -263,6 +262,11 @@ namespace FoodDispenserApp.ViewModels
             if (TemperatureHistory.Count > 10) TemperatureHistory.RemoveAt(0);
             if (HumidityHistory.Count > 10) HumidityHistory.RemoveAt(0);
             if (FoodLevelHistory.Count > 10) FoodLevelHistory.RemoveAt(0);
+
+            // Actualizar los gráficos para reflejar los nuevos datos
+            TemperatureChart = new LineChart { Entries = TemperatureHistory };
+            HumidityChart = new LineChart { Entries = HumidityHistory };
+            FoodLevelChart = new LineChart { Entries = FoodLevelHistory };
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null!)
