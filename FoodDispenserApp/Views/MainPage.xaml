@@ -4,7 +4,7 @@
              xmlns:chart="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="FoodDispenserApp.MainPage"
              xmlns:converters="clr-namespace:FoodDispenserApp.Converters"
-             Title="Food Dispenser">
+             Title="Aplicación de dispensado para peces UTMACH">
 
     <ContentPage.Resources>
         <converters:StatusColorConverter x:Key="StatusColorConverter" />
